@@ -60,6 +60,7 @@ ENV         PHP_WEBSERVER_PORT 80
 COPY        tests/test.php /root/test.php
 COPY        post-run.sh /root/post-run.sh
 RUN         chmod +x /root/post-run.sh /root/test.php && \
-            chown www-data:www-data /usr/local/src/xhgui/config/config.php
+            chown www-data:www-data /usr/local/src/xhgui/config/config.php && \
+            chown -R www-data:www-data /usr/local/src/xhgui/cache
 
 CMD         ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
