@@ -1,35 +1,38 @@
-### Step 1 : clone repo
-FROM    alpine/git AS xhgui_sources
-# Clone xhgui and install master as there is no suitable tag, then remove useless files
-RUN     git clone --depth 1 https://github.com/pshentsoff/xhgui /usr/local/src/xhgui && \
-        cd /usr/local/src/xhgui && \
-        rm -rf /usr/local/src/xhgui/.git \
-               /usr/local/src/xhgui/.scrutinizer.yml \
-               /usr/local/src/xhgui/.travis.yml \
-               /usr/local/src/xhgui/phpunit.xml \
-               /usr/local/src/xhgui/README.md \
-               /usr/local/src/xhgui/tests
-
-
-### Step 2 : Build project with composer
+### Step 1 : Build project with composer
 FROM        edyan/php:7.2 as xhgui_built
-COPY        --from=xhgui_sources --chown=www-data:www-data /usr/local/src/xhgui /usr/local/src/xhgui
-COPY        --from=composer:1.8  --chown=www-data:www-data /usr/bin/composer /usr/bin/composer
-COPY        --chown=www-data:www-data conf/xhgui.config.php /usr/local/src/xhgui/config/config.php
 
-WORKDIR     /usr/local/src/xhgui
+LABEL       maintainer="Vadim Pshentsov <pshentsoff@gmail.com>"
+
+RUN         apt update && \
+            apt upgrade -y && \
+            apt install -y \
+                curl \
+                git \
+                git-flow \
+                sudo && \
+            apt autoremove -y && \
+            apt autoclean && \
+            apt clean && \
+            echo "www-data ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+ENV         COMPOSER_ALLOW_SUPERUSER 1
+RUN         curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer && \
+            composer global require hirak/prestissimo --no-plugins --no-scripts
+
+# Clone xhgui and install master as there is no suitable tag
+ARG         CLONE_XHGUI_SOURCE="true"
 USER        www-data
+RUN         if [ "$CLONE_XHGUI_SOURCE" = "true" ]; then \
+                sudo git clone --depth 1 https://github.com/pshentsoff/xhgui /usr/local/src/xhgui && \
+                sudo chown -R www-data:www-data /usr/local/src/xhgui && \
+                cd /usr/local/src/xhgui && \
+                git flow init -d && \
+                php install.php && \
+                composer require --update-no-dev --no-scripts alcaeus/mongo-php-adapter ^1.1; \
+            fi
+COPY        conf/xhgui.config.php /usr/local/src/xhgui/config/config.php
 
-# Accelerate download
-RUN         composer global require hirak/prestissimo --no-plugins --no-scripts && \
-            ln -s /usr/bin/composer composer.phar && \
-            sed -i 's/composer\.phar install --prefer-dist/composer.phar install --prefer-dist --no-dev/g' install.php && \
-            php install.php && \
-            composer require --update-no-dev --no-scripts alcaeus/mongo-php-adapter ^1.1 && \
-            rm -f composer.phar
-
-
-### Step 3 : Build the final container
+### Step 2 : Build the final container
 FROM        edyan/php:7.2
 
 ARG         BUILD_DATE
