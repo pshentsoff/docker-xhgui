@@ -1,11 +1,11 @@
 # Xhgui docker image
-[![Build Status](https://travis-ci.com/edyan/docker-xhgui.svg?branch=master)](https://travis-ci.com/edyan/docker-xhgui)
-[![Docker Pulls](https://img.shields.io/docker/pulls/edyan/xhgui.svg)](https://hub.docker.com/r/edyan/xhgui/)
+[![Build Status](https://travis-ci.com/pshentsoff/docker-xhgui.svg?branch=master)](https://travis-ci.com/pshentsoff/docker-xhgui)
+[![Docker Pulls](https://img.shields.io/docker/pulls/pshentsoff/xhgui.svg)](https://hub.docker.com/r/pshentsoff/xhgui/)
 
 
-Docker Hub: https://hub.docker.com/r/edyan/xhgui
+Docker Hub: https://hub.docker.com/r/pshentsoff/xhgui
 
-Docker containers that runs [xhgui](https://github.com/perftools/xhgui) (which needs mongodb and PHP).
+Docker containers that runs [xhgui](https://github.com/pshentsoff/xhgui) (which needs mongodb and PHP).
 
 It's based on :
 * [edyan/php:5.6](https://github.com/edyan/docker-php/tree/master/5.6) image (jessie stable).
@@ -25,7 +25,7 @@ To make it work, you need to link it to an existing PHP environment. Example via
 version: '2'
 services:
   xhgui:
-    image: edyan/xhgui:php7.2
+    image: pshentsoff/xhgui:latest
     # I need to access xhgui
     ports:
       - "9000:80"

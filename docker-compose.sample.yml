@@ -1,7 +1,7 @@
 version: '2'
 services:
   xhgui:
-    image: edyan/xhgui:php7.2
+    image: pshentsoff/xhgui:php7.2
     # I need to access xhgui, it'll be on port 9000
     ports:
       - "9000:80"
