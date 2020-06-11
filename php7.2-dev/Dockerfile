@@ -11,8 +11,7 @@ RUN         apt update && \
                 git \
                 git-flow \
                 mongodb-server-core supervisor \
-                libcap2-bin \
-                sudo && \
+                libcap2-bin && \
             setcap CAP_NET_BIND_SERVICE=+eip /usr/bin/php7.2 && \
             apt purge -y libcap2-bin && \
             apt autoremove -y && \
@@ -38,20 +37,18 @@ ENV         COMPOSER_ALLOW_SUPERUSER 1
 RUN         curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer && \
             composer global require hirak/prestissimo --no-plugins --no-scripts
 
-USER        www-data
 # Clone xhgui and install master as there is no suitable tag
 ARG         CLONE_XHGUI_SOURCE="true"
 RUN         if [ "$CLONE_XHGUI_SOURCE" = "true" ]; then \
-                sudo git clone --depth 1 https://github.com/pshentsoff/xhgui /usr/local/src/xhgui && \
-                sudo chown -R www-data:www-data /usr/local/src/xhgui && \
+                git clone --depth 1 https://github.com/pshentsoff/xhgui /usr/local/src/xhgui && \
+                mkdir vendor && \
+                chown -R www-data:www-data /usr/local/src/xhgui && \
                 cd /usr/local/src/xhgui && \
+                composer install && \
                 git flow init -d && \
-                php install.php && \
                 composer require --update-no-dev --no-scripts alcaeus/mongo-php-adapter ^1.1; \
             fi
 COPY        conf/xhgui.config.php /usr/local/src/xhgui/config/config.php
-
-USER        root
 
 # Global directives
 VOLUME      ["/usr/local/src/xhgui"]
