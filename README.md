@@ -139,3 +139,25 @@ Clean :
 ```bash
 $ docker-compose -f docker-compose.sample.yml down 
 ```
+
+## Dev configuration
+For development purposes you can use `dev` tagged container:
+
+- `git` + `git-flow` packages installations
+- `sudo` package and set `www-data` user as sudoer
+- cloning main repository `pshentsoff/xhgui` 'as is', without removing any files and folders
+ 
+### Do not cloning from main repository
+It is possible not to automatically clone the repository, but instead use the local repository for development by setting `CLONE_XHGUI_SOURCE` argument value to "false" (default is "true") on container build:
+```bash
+docker build --build-arg CLONE_XHGUI_SOURCE="false" -t pshentsoff/xhgui:dev .
+```
+If you do so - than do not forget to set up volume to directory where your repository is (see `docker-compose.dev.yml` for example).
+ 
+### Use external MongoDB server
+It is possible to use external MongoDB server instead of internal without including Mongo packages into container:
+```bash
+docker build --build-arg EXTERNAL_MONGO_SERVER="true" -t pshentsoff/xhgui:dev .
+```
+Do not forget to set a proper value for the environment variable `XHGUI_MONGO_HOST` if you planning to use external server.
+Default value of `EXTERNAL_MONGO_SERVER` is "false" that mean to include Mongo packages into the container build and fixing all required permissions on container start.
