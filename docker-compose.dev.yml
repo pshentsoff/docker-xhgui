@@ -8,6 +8,10 @@ services:
       args:
         # Do not cloning pshentsoff/xhgui repo from remote
         CLONE_XHGUI_SOURCE: "false"
+        # Use external mongo server
+        EXTERNAL_MONGO_SERVER: "true"
+    environment:
+      XHGUI_MONGO_HOST: "mongodb://mongo"
     volumes:
       - ./src/xhgui:/usr/local/src/xhgui
     # I need to access xhgui, it'll be on port 9000

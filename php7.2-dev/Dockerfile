@@ -10,28 +10,31 @@ RUN         apt update && \
                 curl \
                 git \
                 git-flow \
-                mongodb-server-core supervisor \
-                libcap2-bin && \
+                libcap2-bin \
+                supervisor && \
             setcap CAP_NET_BIND_SERVICE=+eip /usr/bin/php7.2 && \
             apt purge -y libcap2-bin && \
-            apt autoremove -y && \
-            apt autoclean && \
-            apt clean && \
             usermod -u 1000 www-data && \
             groupmod -g 1000 www-data && \
             echo "www-data ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers && \
+            mkdir -p /var/log/supervisor
+
+ARG         EXTERNAL_MONGO_SERVER="false"
+RUN         if [ "$EXTERNAL_MONGO_SERVER" = "false" ]; then \
+                apt install -y \
+                mongodb-server-core && \
+                mkdir -p /data/db /var/log/mongodb && \
+                useradd -d /data/db -M mongodb && \
+                chown -R mongodb:mongodb /data/db;\
+            fi
+
+# Cleanup packages
+RUN         apt autoremove -y && \
+            apt autoclean && \
+            apt clean && \
             find /root /tmp -mindepth 1 -delete && \
             rm -rf /var/lib/apt/lists/* /usr/share/man/* /usr/share/doc/* \
-                   /var/cache/* /var/log/* /usr/share/php/docs /usr/share/php/tests
-
-# Prepare Mongodb, supervisord
-COPY        conf/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
-RUN         mkdir -p /data/db /var/log/mongodb && \
-            useradd -d /data/db -M mongodb && \
-            chown -R mongodb:mongodb /data/db && \
-            # Supervisord
-            mkdir -p /var/log/supervisor
+                /var/cache/* /var/log/* /usr/share/php/docs /usr/share/php/tests
 
 ENV         COMPOSER_ALLOW_SUPERUSER 1
 RUN         curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer && \
@@ -57,6 +60,7 @@ ENV         XHGUI_MONGO_HOST   "mongodb://127.0.0.1"
 ENV         MONGO_PORT         27017
 ENV         PHP_WEBSERVER_PORT 80
 
+COPY        conf/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY        tests/test.php /root/test.php
 COPY        post-run.sh /root/post-run.sh
 RUN         chmod +x /root/post-run.sh /root/test.php && \
