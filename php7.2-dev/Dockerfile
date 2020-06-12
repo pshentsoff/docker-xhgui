@@ -19,6 +19,7 @@ RUN         apt update && \
             echo "www-data ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers && \
             mkdir -p /var/log/supervisor
 
+COPY        conf/supervisord* /etc/supervisor/conf.d/
 ARG         EXTERNAL_MONGO_SERVER="false"
 RUN         if [ "$EXTERNAL_MONGO_SERVER" = "false" ]; then \
                 apt install -y \
@@ -26,6 +27,8 @@ RUN         if [ "$EXTERNAL_MONGO_SERVER" = "false" ]; then \
                 mkdir -p /data/db /var/log/mongodb && \
                 useradd -d /data/db -M mongodb && \
                 chown -R mongodb:mongodb /data/db;\
+            else \
+                mv /etc/supervisor/conf.d/supervisord.no_mongo.conf /etc/supervisor/conf.d/supervisord.conf; \
             fi
 
 # Cleanup packages
@@ -60,11 +63,12 @@ ENV         XHGUI_MONGO_HOST   "mongodb://127.0.0.1"
 ENV         MONGO_PORT         27017
 ENV         PHP_WEBSERVER_PORT 80
 
-COPY        conf/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY        tests/test.php /root/test.php
 COPY        post-run.sh /root/post-run.sh
 RUN         chmod +x /root/post-run.sh /root/test.php && \
             chown www-data:www-data /usr/local/src/xhgui/config/config.php && \
-            chown -R www-data:www-data /usr/local/src/xhgui/cache
+            if [ -d /usr/local/src/xhgui/cache ]; then \
+                chown -R www-data:www-data /usr/local/src/xhgui/cache; \
+            fi
 
 CMD         ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
